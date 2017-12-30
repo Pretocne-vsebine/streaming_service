@@ -40,7 +40,7 @@ kumuluzee:
             period-s: 60
       checks:
         http-health-check:
-                connection-url: http://localhost:8082/v1/clips/healthResponseCheck
+                connection-url: http://localhost:8083/v1/clips/healthResponseCheck
   metrics:
     servlet:
       enabled: true
