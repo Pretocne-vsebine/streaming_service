@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: streaming_service
+    labels:
+        app: streaming_service
+spec:
+    ports:
+        - port: 8083
+    selector:
+        app: streaming_service
+        tier: app
+    type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: streaming_service-pv-claim
+  labels:
+    app: streaming_service
+spec:
+    selector:
+        matchLabels:
+            type: local
+            app: streaming_service
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 10Gi
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata: 
+    name: streaming_service
+    labels: 
+      app: streaming_service
+spec:
+    minReadySeconds: 0
+    replicas: 1
+    selector:
+        matchLabels:
+            app: streaming_service
+            tier: app
+    template: 
+        metadata:
+            labels:
+                app: streaming_service
+                tier: app
+        spec:
+            containers:
+                - name: app-clip
+                  image: zigakern/streaming_service:v0.1.0
+                  env:
+                    - name: KUMULUZEE_CONFIG_ETCD_HOSTS
+                      value: http://etcd:2379
+                    - name: KUMULUZEE_DISCOVERY_ETCD_HOSTS
+                      value: http://etcd:2379
+                    - name: KUMULUZEE_SERVER_BASE-URL
+                      value: http://streaming_service:8083
+                  ports:
+                    - containerPort: 8083
+                      name: app
+                      protocol: TCP
+                  livenessProbe:
+                        httpGet:
+                          path: /health
+                          port: 8083
+                        initialDelaySeconds: 60
+                        periodSeconds: 5
+                  volumeMounts:
+                    - name: streaming_service-persistent-storage
+                      mountPath: /data
+            volumes:
+                - name: streaming_service-persistent-storage
+                  persistentVolumeClaim:
+                      claimName: streaming_service-pv-claim

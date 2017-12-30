@@ -1,0 +1,5 @@
+META-INF\services\javax.ws.rs.core.Application
+logger\LogContextInterceptor.class
+producer\JacksonProducer.class
+userApplication.class
+UserResource.class
